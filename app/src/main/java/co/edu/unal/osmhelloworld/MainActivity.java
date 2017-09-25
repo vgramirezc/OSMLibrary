@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import org.osmdroid.api.IMapController;
+import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapController;
@@ -24,19 +25,17 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    MapView mOpenMapView;
     MyLocationNewOverlay mLocationOverlay;
-    CompassOverlay mCompassOverlay;
     RotationGestureOverlay mRotationGestureOverlay;
-    ScaleBarOverlay mScaleBarOverlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // Important! Set your user agent to prevent getting banned from the OSM servers
-        //org.osmdroid.tileprovider.constants.OpenStreetMapTileProviderConstants.setUserAgentValue(BuildConfig.APPLICATION_ID);
 
-        ItemizedIconOverlay.OnItemGestureListener<OverlayItem> myOnItemGestureListener = new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+        ItemizedIconOverlay.OnItemGestureListener<OverlayItem> myOnItemGestureListener
+                = new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
 
             @Override
             public boolean onItemLongPress(int arg0, OverlayItem arg1) {
@@ -48,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onItemSingleTapUp(int index, OverlayItem item) {
                 Toast.makeText(
                         MainActivity.this,
-                        item.getSnippet()+ "n" + item.getTitle() + "n"
+                        item.getSnippet()+ "\n" + item.getTitle() + "\n"
                                 + item.getPoint().getLatitude() + " : "
                                 + item.getPoint().getLongitude(),
                         Toast.LENGTH_LONG).show();
@@ -58,55 +57,43 @@ public class MainActivity extends AppCompatActivity {
 
         };
 
-        MapView myOpenMapView = (MapView)findViewById(R.id.map);
-        myOpenMapView.setBuiltInZoomControls(true);
-        IMapController myMapController = myOpenMapView.getController();
+        mOpenMapView = (MapView) findViewById(R.id.map);
+        mOpenMapView.setBuiltInZoomControls(true);
+        IMapController myMapController = mOpenMapView.getController();
         myMapController.setZoom(4);
-        myOpenMapView.setMultiTouchControls(true);
+        mOpenMapView.setMultiTouchControls(true);
 
-        ArrayList<OverlayItem> anotherOverlayItemArray;
-        anotherOverlayItemArray = new ArrayList<OverlayItem>();
+        ArrayList<OverlayItem> points = new ArrayList<OverlayItem>();
+        points.add(new OverlayItem("US", "US", new GeoPoint(38.883333, -77.016667)));
+        points.add(new OverlayItem("China", "China", new GeoPoint(39.916667, 116.383333)));
+        points.add(new OverlayItem("United Kingdom", "United Kingdom", new GeoPoint(51.5, -0.116667)));
+        points.add(new OverlayItem("Germany", "Germany", new GeoPoint(52.516667, 13.383333)));
+        points.add(new OverlayItem("Korea", "Korea", new GeoPoint(38.316667, 127.233333)));
+        points.add(new OverlayItem("India", "India", new GeoPoint(28.613333, 77.208333)));
+        points.add(new OverlayItem("Russia", "Russia", new GeoPoint(55.75, 37.616667)));
+        points.add(new OverlayItem("France", "France", new GeoPoint(48.856667, 2.350833)));
+        points.add(new OverlayItem("Canada", "Canada", new GeoPoint(45.4, -75.666667)));
 
-        anotherOverlayItemArray.add(new OverlayItem("0, 0", "0, 0", new GeoPoint(0.0, 0.0)));
-        anotherOverlayItemArray.add(new OverlayItem("US", "US", new GeoPoint(38.883333, -77.016667)));
-        anotherOverlayItemArray.add(new OverlayItem("China", "China", new GeoPoint(39.916667, 116.383333)));
-        anotherOverlayItemArray.add(new OverlayItem("United Kingdom", "United Kingdom", new GeoPoint(51.5, -0.116667)));
-        anotherOverlayItemArray.add(new OverlayItem("Germany", "Germany", new GeoPoint(52.516667, 13.383333)));
-        anotherOverlayItemArray.add(new OverlayItem("Korea", "Korea", new GeoPoint(38.316667, 127.233333)));
-        anotherOverlayItemArray.add(new OverlayItem("India", "India", new GeoPoint(28.613333, 77.208333)));
-        anotherOverlayItemArray.add(new OverlayItem("Russia", "Russia", new GeoPoint(55.75, 37.616667)));
-        anotherOverlayItemArray.add(new OverlayItem("France", "France", new GeoPoint(48.856667, 2.350833)));
-        anotherOverlayItemArray.add(new OverlayItem("Canada", "Canada", new GeoPoint(45.4, -75.666667)));
+        ItemizedOverlayWithFocus<OverlayItem> myItemizedOverlay =
+                new ItemizedOverlayWithFocus<OverlayItem>(this, points, myOnItemGestureListener);
+        mOpenMapView.getOverlays().add(myItemizedOverlay);
+        myItemizedOverlay.setFocusItemsOnTap(true);
 
-        ItemizedOverlayWithFocus<OverlayItem> anotherItemizedIconOverlay = new ItemizedOverlayWithFocus<OverlayItem>(this, anotherOverlayItemArray, myOnItemGestureListener);
-        myOpenMapView.getOverlays().add(anotherItemizedIconOverlay);
-
-        anotherItemizedIconOverlay.setFocusItemsOnTap(true);
-
-        /*MinimapOverlay miniMapOverlay = new MinimapOverlay(this, myOpenMapView.getTileRequestCompleteHandler());
+        MinimapOverlay miniMapOverlay =
+                new MinimapOverlay(this, mOpenMapView.getTileRequestCompleteHandler());
         miniMapOverlay.setZoomDifference(5);
         miniMapOverlay.setHeight(200);
         miniMapOverlay.setWidth(200);
-        myOpenMapView.getOverlays().add(miniMapOverlay);*/
+        mOpenMapView.getOverlays().add(miniMapOverlay);
 
-        /*mCompassOverlay = new CompassOverlay(this, new InternalCompassOrientationProvider(this), myOpenMapView);
-        mCompassOverlay.enableCompass();
-        myOpenMapView.getOverlays().add(mCompassOverlay);*/
-
-        /*mScaleBarOverlay = new ScaleBarOverlay(myOpenMapView);
-        mScaleBarOverlay.setCentred(true);
-        //play around with these values to get the location on screen in the right place for your application
-        mScaleBarOverlay.setScaleBarOffset( 200 , 50);
-        myOpenMapView.getOverlays().add(this.mScaleBarOverlay);*/
-
-        mRotationGestureOverlay = new RotationGestureOverlay(this, myOpenMapView);
+        mRotationGestureOverlay = new RotationGestureOverlay(mOpenMapView);
         mRotationGestureOverlay.setEnabled(true);
-        myOpenMapView.setMultiTouchControls(true);
-        myOpenMapView.getOverlays().add(this.mRotationGestureOverlay);
+        mOpenMapView.setMultiTouchControls(true);
+        mOpenMapView.getOverlays().add(this.mRotationGestureOverlay);
 
-        mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider( this ),myOpenMapView);
+        mLocationOverlay = new MyLocationNewOverlay(new GpsMyLocationProvider( this ),mOpenMapView);
         mLocationOverlay.enableMyLocation();
-        myOpenMapView.getOverlays().add(mLocationOverlay);
+        mOpenMapView.getOverlays().add(mLocationOverlay);
 
     }
 }
